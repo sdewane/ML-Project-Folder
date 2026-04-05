@@ -1,0 +1,11 @@
+The purpose of this txt is to doccument our findings when running data_analytics.py on our dataset.
+Currently working on housing.csv which is a dataset from kaggle. We are using this dataset as a proof of concept for our project before tackling getting real world data. 
+
+<Process and evaluation plan>
+1. median imputation for missing values
+2. one-hot encoding for categorical features
+3. feature scaling for linear modeling
+4. use pipelines for data leakage
+5. baseline model -> CV model selection -> hyperparameter tuning
+6. Primary Metrics:RMSE, Secondar:MAE and R^2
+7. Final evaluation only on test data 

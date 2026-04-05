@@ -52,6 +52,7 @@ def data_info(df):
 
 #data_info(df)
 #^^^^^^^^^^^^^^^ uncomment to see basic data info 
+
 #1. longitude: A measure of how far west a house is; a higher value is farther west
 #2. latitude: A measure of how far north a house is; a higher value is farther north
 #3. housingMedianAge: Median age of a house within a block; a lower number is a newer building
@@ -77,7 +78,7 @@ def find_encoded_data(df):
     for col in df.columns:
         print(df[col].value_counts().head(20))
 
-#find_encoded_data(data)
+#find_encoded_data(df)
 #^^^^^^^^^^^^^^^^^^^^^^^uncomment to see if there are any encoded missing value entries per column 
 
 def find_duplicates(df):
