@@ -1,6 +1,9 @@
+
 # Imprt necessary libraries for data manipulation, visualization, and machine learning.
 # %pip install -q numpy pandas seaborn matplotlib scikit-learn
 
+from sklearn import set_config
+from IPython.display import display
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,7 +23,7 @@ from sklearn.metrics import (
     root_mean_squared_error,
     r2_score
 )
-
+set_config(display="diagram")
 print("All libraries imported successfully.")   
 
 #config
@@ -159,3 +162,64 @@ def corr_wth_trg_col (target, num_cols, df):
     print(corr_wth_taget)
 #corr_wth_trg_col(TARGET_COL, num_cols,df)
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^uncomment to see correlation of numerical datapoints and target value
+
+#data processing
+# seperate features and target
+X = df.drop(columns=[TARGET_COL])
+Y= df[TARGET_COL]
+
+#training and test data split to avoid data leakage
+X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=.2, random_state=RANDOM_STATE)
+
+numerical_features = X.select_dtypes(include=(np.number)).columns.to_list()
+categorical_features = X.select_dtypes(exclude=(np.number)).columns.to_list()
+#print("Numerical features: ", numerical_features)
+#print("Categorical features:", categorical_features)
+
+#numerical preprocessing steps
+numerical_transformer = Pipeline(
+    steps=[
+        ("imputer",SimpleImputer(strategy="median")),
+        ("scalar", StandardScaler())
+    ]
+)
+
+#categorical preprocessing steps
+categorical_transformer = Pipeline(
+    steps=[
+        ("imputer",SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore"))
+    ]
+)
+
+#preprocessing pipeline
+preprocess = ColumnTransformer(
+    transformers=[
+        ("num",numerical_transformer,numerical_features),
+        ("cat",categorical_transformer,categorical_features)
+    ]
+)
+
+#baseline model pre optimization
+basline_pipe = Pipeline(
+    steps=[
+        ("preprocess",preprocess),
+        ("model",LinearRegression())
+    ]
+)
+
+#process the data and train the baseline model
+basline_pipe.fit(X_train,Y_train)
+
+
+train_baseline_pred=basline_pipe.predict(X_train)
+test_baseline_pred= basline_pipe.predict(X_test)
+
+train_baseline_rmse = root_mean_squared_error(Y_train, train_baseline_pred)
+train_baseline_mae = mean_absolute_error(Y_train, train_baseline_pred)
+train_baseline_r2 = r2_score(Y_train, train_baseline_pred)
+
+print("\n=== Train baseline metrics ===")
+print(f"RMSE: {train_baseline_rmse:.3f}")
+print(f"MAE: {train_baseline_mae:.3f}")
+print(f"R2: {train_baseline_r2:.3f}")
