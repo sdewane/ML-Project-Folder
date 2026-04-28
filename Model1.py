@@ -16,7 +16,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
 
 from sklearn.metrics import (
     mean_absolute_error,
@@ -170,6 +170,16 @@ Y= df[TARGET_COL]
 
 #training and test data split to avoid data leakage
 X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=.2, random_state=RANDOM_STATE)
+y_train_max = np.max(Y_train)
+y_train_min = np.min(Y_train)
+y_train_range = y_train_max - y_train_min
+y_train_mean = np.mean(Y_train)
+
+y_test_max = np.max(Y_test)
+y_test_min = np.min(Y_test)
+y_test_range = y_test_max - y_test_min
+y_test_mean = np.mean(Y_test)
+
 
 numerical_features = X.select_dtypes(include=(np.number)).columns.to_list()
 categorical_features = X.select_dtypes(exclude=(np.number)).columns.to_list()
@@ -221,5 +231,70 @@ train_baseline_r2 = r2_score(Y_train, train_baseline_pred)
 
 print("\n=== Train baseline metrics ===")
 print(f"RMSE: {train_baseline_rmse:.3f}")
+print(f"RMSE Nomralized: {train_baseline_rmse/y_train_range:.3f}")
 print(f"MAE: {train_baseline_mae:.3f}")
+print(f"MAE Normalized: {train_baseline_mae/y_train_mean:.3f}")
 print(f"R2: {train_baseline_r2:.3f}")
+
+test_baseline_rmse = root_mean_squared_error(Y_test, test_baseline_pred)
+test_baseline_mae = mean_absolute_error(Y_test, test_baseline_pred)
+test_baseline_r2 = r2_score(Y_test, test_baseline_pred)
+
+print("\n=== Test baseline metrics ===")
+print(f"RMSE: {test_baseline_rmse:.3f}")
+print(f"RMSE Nomralized: {test_baseline_rmse/y_test_range:.3f}")
+print(f"MAE: {test_baseline_mae:.3f}")
+print(f"MAE Normalized: {test_baseline_mae/y_test_mean:.3f}")
+print(f"R2: {test_baseline_r2:.3f}")
+
+#optimizing the data section
+
+#dictionary of different models
+models={
+    "Linear regression":LinearRegression(),
+    "Ridge regression":Ridge(random_state=RANDOM_STATE),
+    "Lasso regression":Lasso(random_state=RANDOM_STATE,max_iter=10000),
+    "Random forest":RandomForestRegressor(),
+    "HistGB": HistGradientBoostingRegressor()
+}
+
+k=5
+cv=KFold(n_splits=k,shuffle=True,random_state=RANDOM_STATE)
+
+scoring={
+    "rmse":"neg_root_mean_squared_error",
+    "mae":"neg_mean_absolute_error",
+    "r2":"r2"
+}
+
+rows = []
+
+#Cross validation for loop, run each model 5 times and cross validate the results
+
+for name, model in models.items():
+    pipe = Pipeline(
+        steps = [
+            ("preprocess",preprocess),
+            ("model",model)
+        ]
+    )
+    scrores = cross_validate(pipe,X_train,Y_train, cv=cv, scoring=scoring, n_jobs=1)
+    rows.append({
+        "model":name,
+        "cv_rmse":-scrores["test_rmse"].mean(),
+        "cv_mae":-scrores["test_mae"].mean(),
+        "cv_r2":scrores["test_r2"].mean()
+        })
+    
+# models are sorted by lowest root mean squared error
+cv_results = pd.DataFrame(rows).sort_values("cv_rmse")
+print("== CV Model Comparison ==")
+print(cv_results)
+
+best_row = cv_results.sort_values("cv_rmse").iloc[0]
+best_model_name = best_row["model"]
+best_rmse = best_row["cv_rmse"]
+
+print("== Best Model Based on CV RMSE ==")
+print("Model: ", best_model_name)
+print("CV RMSE: ", best_rmse)
