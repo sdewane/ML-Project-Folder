@@ -9,5 +9,4 @@
 
 4. **Install Dependencies**
    `pip install -r requirements.txt`
-
-   
+5.   python main.py
