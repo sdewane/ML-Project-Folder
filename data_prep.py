@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 def normalize_metro(name):
-    """Fixes the mismatch between 'City-Suburb, ST' and 'City, ST'."""
     if pd.isna(name) or name == "": return "Other"
     main_city = str(name).split('-')[0]
     if ',' in name:
