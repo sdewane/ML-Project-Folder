@@ -7,7 +7,7 @@ If you are cloning the ML-Project-Folder into another folder, I would recommend 
 **If you want to see how the system actually collects and cleans the data, download all the .csv files EXCEPT for 'final_cleaned_market_data.csv'.** To save time, main won't re-make a 'final_cleaned_market_data.csv' if it detects it in the 'data' folder.
 
 2. **Create a Virtual Environment**
-   - Mac/Linux: `python -m venv .venv`
+   - Mac/Linux: `python3 -m venv .venv`
    - Windows: `python -m venv .venv`
 
 3. **Activate the Environment**
